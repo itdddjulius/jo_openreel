@@ -1,4 +1,8 @@
+import os
+import subprocess
+import sys
 import unittest
+from pathlib import Path
 
 from fastapi.testclient import TestClient
 
@@ -11,7 +15,9 @@ class OpenReelTests(unittest.TestCase):
         cls.client = TestClient(app)
 
     def test_health_and_home(self):
-        self.assertEqual(self.client.get("/api/health").json()["status"], "ok")
+        health = self.client.get("/api/health").json()
+        self.assertEqual(health["status"], "ok")
+        self.assertEqual(health["version"], "1.1.0")
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
         self.assertIn("OPENREELpy", response.text)
@@ -46,6 +52,31 @@ class OpenReelTests(unittest.TestCase):
     def test_document_allowlist(self):
         self.assertEqual(self.client.get("/docs/README.md").status_code, 200)
         self.assertEqual(self.client.get("/docs/NOT-ALLOWED.md").status_code, 404)
+
+    def test_vercel_cold_import_from_project_root(self):
+        root = Path(__file__).resolve().parents[1]
+        environment = os.environ.copy()
+        environment.pop("PYTHONPATH", None)
+        result = subprocess.run(
+            [sys.executable, "-c", "from app import app; assert app.version == '1.1.0'"],
+            cwd=root,
+            env=environment,
+            text=True,
+            capture_output=True,
+            timeout=15,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_required_deployment_assets_exist(self):
+        root = Path(__file__).resolve().parents[1]
+        required = [
+            root / "templates" / "index.html",
+            root / "static" / "app.css",
+            root / "static" / "app.js",
+            root / "docs" / "README.md",
+        ]
+        self.assertEqual([str(path) for path in required if not path.is_file()], [])
 
 
 if __name__ == "__main__":

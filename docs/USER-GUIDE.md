@@ -1,5 +1,7 @@
 # OPENREELpy - USER GUIDE
 
+OPENREELpy version 1.1.0 includes a Vercel startup reliability update. This does not change the search, saved-item, history, documentation or player workflow. Administrators can confirm the deployed service at `/api/health`; ordinary users continue to open the root URL.
+
 ## Page 1 - Searching Open Media
 
 Enter a clear topic in the main search box. Good examples include “silent comedy films”, “early space exploration documentary”, “computer history films” or “jazz concert”. Choose SEARCH or press Enter. Suggested topic chips run the same workflow.

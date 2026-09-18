@@ -14,7 +14,9 @@ This is not a Netflix clone and does not use Netflix branding, content, code, re
 
 Create a Python 3.12 virtual environment, run `pip install -r requirements.txt`, then start locally with `uvicorn app:app --reload --port 8080`. Open `http://localhost:8080`. Docker users can run `docker compose up --build`. The health endpoint is `/api/health`; interactive FastAPI documentation is `/api/docs`.
 
-For Vercel, import the repository or run `vercel deploy` with Vercel CLI 48.1.8 or later. Official FastAPI integration discovers the `app` instance through `[tool.vercel] entrypoint = "app:app"`. `vercel.json` configures the resolved `app.py` function with a 30-second maximum duration. `requirements.txt` supplies production dependencies. No custom Build Command, output directory or legacy `builds` configuration is needed.
+For Vercel, import the repository or run `vercel deploy` with Vercel CLI 48.1.8 or later. Official FastAPI integration automatically discovers the `app` instance in the root `app.py`. OPENREELpy intentionally uses this documented zero-configuration route: there is no competing custom entrypoint, legacy `builds` block, custom Build Command or output directory. `.python-version` pins Python 3.12 and `requirements.txt` supplies production dependencies.
+
+Version 1.1.0 removes the redundant `[tool.vercel] entrypoint` declaration and the plan-dependent function-duration override. This eliminates configuration ambiguity during framework detection. It also makes the static mount tolerant of a cold import while automated tests separately require every interface asset to exist. The health response now exposes application and Python versions, making a successful Vercel invocation directly observable.
 
 `app.py` contains FastAPI routes, safety checks, the advanced-query compiler, Internet Archive integration and playable-file resolver. `templates/index.html` contains the shell. `static` contains CSS and minimal browser JavaScript. FastAPI mounts `/static`; Vercel can promote this supported mount to its CDN. Markdown and PDF manuals remain in `docs` and are served through a strict allowlisted route.
 
@@ -51,3 +53,5 @@ Not every Archive record has a browser-playable file. Some files may be geograph
 The Google dork is a research aid; OPENREELpy does not scrape Google results. The in-app catalogue is produced independently through the Archive API. Search ranking reflects Archive downloads rather than personal recommendations. There is no adaptive bitrate streaming, DRM playback, offline download manager or cross-device synchronisation.
 
 For questions, use CONTACT. The footer link “Another Website by Julius Olatokunbo” opens `https://www.raiiarcomio.com`. Maintain the rights-aware restrictions, source links, failure messages and tests when extending the project.
+
+If Vercel reports `FUNCTION_INVOCATION_FAILED`, inspect the Function Logs for the first Python traceback, verify Root Directory is the folder containing `app.py`, and redeploy without retaining an old custom Build Command. A successful deployment must return HTTP 200 and `"status":"ok"` from `/api/health`. Do not set the Root Directory to `templates`, `static` or the outer folder that merely contains the project ZIP.

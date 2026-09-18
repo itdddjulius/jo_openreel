@@ -1,5 +1,7 @@
 # OPENREELpy - FUNCTION GUIDE
 
+Version 1.1.0 uses Vercel's native FastAPI discovery contract: the ASGI object is named `app` and lives in root `app.py`. Python 3.12 is pinned in `.python-version`; dependencies are declared in `requirements.txt`; `vercel.json` supplies only its schema. Keeping a single source of truth prevents an obsolete entrypoint or build rule from shadowing framework detection.
+
 ## Page 1 - Architecture
 
 OPENREELpy is a FastAPI ASGI application exported as `app` from `app.py`. Search validation, dork construction, Archive queries, metadata selection and playable-file URL generation run in Python. Bootstrap 5, Tailwind CSS and Font Awesome support the interface. Minimal browser JavaScript renders API responses, controls dialogs and drives native video.

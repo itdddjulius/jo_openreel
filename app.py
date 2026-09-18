@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import html
 import re
+import sys
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
@@ -27,7 +28,7 @@ VIDEO_FORMAT = re.compile(r"MPEG4|h\.264|WebM|Ogg Video", re.IGNORECASE)
 app = FastAPI(
     title="OPENREELpy",
     description="Public-domain and open-access video discovery API",
-    version="1.0.0",
+    version="1.1.0",
     docs_url="/api/docs",
     redoc_url=None,
 )
@@ -118,12 +119,21 @@ def media_mime(name: str) -> str:
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def home() -> HTMLResponse:
-    return HTMLResponse((ROOT / "templates" / "index.html").read_text(encoding="utf-8"))
+    page = ROOT / "templates" / "index.html"
+    if not page.is_file():
+        raise HTTPException(503, "The application interface is unavailable.")
+    return HTMLResponse(page.read_text(encoding="utf-8"))
 
 
 @app.get("/api/health")
 async def health() -> dict[str, str]:
-    return {"status": "ok", "application": "OPENREELpy", "runtime": "FastAPI"}
+    return {
+        "status": "ok",
+        "application": "OPENREELpy",
+        "version": app.version,
+        "runtime": "FastAPI",
+        "python": f"{sys.version_info.major}.{sys.version_info.minor}",
+    }
 
 
 @app.post("/api/search")
@@ -199,7 +209,12 @@ async def documentation(document: str) -> FileResponse:
     }
     if document not in allowed:
         raise HTTPException(404, "Document not found.")
-    return FileResponse(ROOT / "docs" / document)
+    path = ROOT / "docs" / document
+    if not path.is_file():
+        raise HTTPException(404, "Document not found.")
+    return FileResponse(path)
 
 
-app.mount("/static", StaticFiles(directory=ROOT / "static"), name="static")
+# Avoid a cold-start import failure if a deployment bundle is incomplete. The
+# deployment smoke test still verifies that these assets are actually present.
+app.mount("/static", StaticFiles(directory=ROOT / "static", check_dir=False), name="static")

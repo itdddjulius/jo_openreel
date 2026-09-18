@@ -1,10 +1,14 @@
 # OPENREELpy - TESTS
 
+Version 1.1.0 adds a deployment regression test that starts a fresh Python process from the project root and imports `app`, matching the critical Vercel cold-start step. A second test verifies the HTML, CSS, JavaScript and documentation assets needed after import. Together, these tests catch the two common causes of `FUNCTION_INVOCATION_FAILED`: an import exception and an incomplete deployment bundle.
+
+Before deployment run `python -m unittest discover -s tests -v`. Then start `uvicorn app:app --port 8080` and request `/api/health`. The response must report status `ok`, version `1.1.0`, runtime `FastAPI` and Python `3.12`. On Vercel, repeat the health request against the deployment URL and inspect Function Logs if it is not HTTP 200.
+
 ## Page 1 - Startup and Static Resources
 
 Run `uvicorn app:app --port 8080`. Verify `/`, `/static/app.css`, `/static/app.js`, `/api/health`, `/api/docs` and all Markdown/PDF routes. Confirm no Python import, ASGI or browser-console error. Verify fixed header/footer and independently scrolling main content.
 
-Confirm startup without an account or API key. Validate `pyproject.toml` entrypoint, `vercel.json` function key, requirements installation, Docker behaviour and ZIP integrity. After Vercel import, confirm FastAPI detection rather than `FUNCTION_INVOCATION_FAILED`.
+Confirm startup without an account or API key. Validate root `app.py` auto-detection, the Python 3.12 pin, minimal `vercel.json`, requirements installation, Docker behaviour and ZIP integrity. After Vercel import, confirm FastAPI detection rather than `FUNCTION_INVOCATION_FAILED`.
 
 <!-- PAGE BREAK -->
 
